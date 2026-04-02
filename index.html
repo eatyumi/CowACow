@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>牛了个牛</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background: #f5e8c7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .game-container {
+            width: 90%;
+            max-width: 800px;
+            background: #fff8e6;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #8b5a2b;
+            gap: 20px;
+            width: 100%;
+        }
+        .level-info {
+            flex: 1;
+        }
+        .game-info-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+        }
+        .expand-countdown {
+            position: relative;
+            background: #ff4444;
+            color: #fff;
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+            display: none;
+            z-index: 10;
+            white-space: nowrap;
+        }
+        .level-5 .expand-countdown {
+            background: #ffd700;
+            color: #4a3728;
+        }
+
+        .btn-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 5;
+        }
+        .level-btn {
+            padding: 8px 16px;
+            background: #d2691e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            white-space: nowrap;
+        }
+        .level-btn:hover {
+            background: #b85a17;
+        }
+        .sound-toggle-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #d2691e;
+            border: 2px solid #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .sound-toggle-btn:hover {
+            background: #b85a17;
+        }
+        .sound-toggle-btn img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        .game-field {
+            width: 100%;
+            height: 400px;
+            background: #e6d5b8;
+            border-radius: 10px;
+            position: relative;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 2px solid #8b5a2b;
+        }
+        .brick {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            z-index: 1;
+        }
+        .brick.clickable {
+            cursor: pointer;
+            z-index: 10;
+            opacity: 1;
+            box-shadow: 0 4px 12px rgba(210, 105, 30, 0.4);
+        }
+        .brick.clickable:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 15px rgba(210, 105, 30, 0.5);
+        }
+        .brick.unclickable {
+            cursor: not-allowed;
+            opacity: 0.65;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .slot-container {
+            width: 100%;
+            height: 80px;
+            background: #8b5a2b;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 0 10px;
+            margin-bottom: 15px;
+        }
+        .slot {
+            width: 70px;
+            height: 70px;
+            background: #fff;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border: 2px solid #d2691e;
+        }
+        .slot-brick {
+            width: 60px;
+            height: 60px;
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+        }
+
+        .function-buttons {
+            width: 100%;
+            background: #d2691e;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 50px;
+            padding: 12px 20px;
+            margin-bottom: 15px;
+        }
+        .function-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+        .function-btn {
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            border: 2px solid #8b5a2b;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .function-btn:hover {
+            transform: scale(1.05);
+            border-color: #b85a17;
+        }
+        .function-btn img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+        .function-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #fff;
+            white-space: nowrap;
+            transition: color 0.2s;
+        }
+        .function-item:hover .function-name {
+            color: #fef0c7;
+        }
+        .function-item.disabled {
+            opacity: 0.5;
+        }
+        .function-item.disabled .function-btn {
+            pointer-events: auto;
+            cursor: not-allowed;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #8b5a2b;
+        }
+        .modal-btn {
+            margin-top: 20px;
+            padding: 10px 30px;
+            background: #d2691e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .modal-btn:hover {
+            background: #b85a17;
+        }
+
+        .all-win-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            padding: 30px 40px;
+        }
+        .win-img {
+            width: 100%;
+            max-width: 350px;
+            height: auto;
+            border-radius: 10px;
+            border: 3px solid #d2691e;
+            object-fit: cover;
+        }
+        .all-win-text {
+            font-size: 28px;
+            font-weight: bold;
+            color: #8b5a2b;
+            text-align: center;
+        }
+
+        .level-5 .game-field {
+            background: #4a3728;
+            border-color: #ffd700;
+        }
+        .level-5 .game-info {
+            color: #ffd700;
+        }
+        .level-5 .level-btn {
+            background: #ffd700;
+            color: #4a3728;
+        }
+        .level-5 .level-btn:hover {
+            background: #f0c808;
+        }
+        .level-5 .sound-toggle-btn {
+            background: #ffd700;
+            border-color: #4a3728;
+        }
+        .level-5 .sound-toggle-btn:hover {
+            background: #f0c808;
+        }
+        .level-5 .function-buttons {
+            background: #4a3728;
+        }
+        .level-5 .function-btn {
+            background: #ffd700;
+            border-color: #fff;
+        }
+        .level-5 .function-btn:hover {
+            border-color: #f0c808;
+            background: #f0c808;
+        }
+        .level-5 .function-name {
+            color: #ffd700;
+        }
+        .level-5 .function-item:hover .function-name {
+            color: #fff;
+        }
+        .level-5 .all-win-content {
+            border-color: #ffd700;
+        }
+        .level-5 .win-img {
+            border-color: #ffd700;
+        }
+        .level-5 .all-win-text {
+            color: #ffd700;
+        }
+        .level-5 .modal-btn {
+            background: #ffd700;
+            color: #4a3728;
+        }
+        .level-5 .modal-btn:hover {
+            background: #f0c808;
+        }
+
+        @media (max-width: 600px) {
+            .game-info {
+                font-size: 14px;
+                gap: 10px;
+            }
+            .expand-countdown {
+                font-size: 12px;
+                padding: 2px 8px;
+                border-radius: 10px;
+            }
+            .level-btn {
+                padding: 6px 10px;
+                font-size: 14px;
+            }
+            .sound-toggle-btn {
+                width: 32px;
+                height: 32px;
+            }
+            .sound-toggle-btn img {
+                width: 18px;
+                height: 18px;
+            }
+            .function-buttons {
+                gap: 20px;
+                padding: 10px 10px;
+            }
+            .function-btn {
+                width: 40px;
+                height: 40px;
+            }
+            .function-btn img {
+                width: 28px;
+                height: 28px;
+            }
+            .function-name {
+                font-size: 12px;
+            }
+            .function-item {
+                gap: 4px;
+            }
+            .all-win-content {
+                padding: 20px 15px;
+                gap: 15px;
+            }
+            .all-win-text {
+                font-size: 22px;
+            }
+            .win-img {
+                max-width: 250px;
+            }
+            .modal-btn {
+                padding: 8px 20px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container" id="gameContainer">
+        <div class="game-info">
+            <div class="level-info">当前关卡：<span id="currentLevel">1</span>/5</div>
+            <div class="game-info-right">
+                <div class="expand-countdown" id="expandCountdown">30</div>
+                <div class="btn-group">
+                    <button class="level-btn" id="restartBtn">重新开始本关</button>
+                    <button class="level-btn" id="guideBtn">玩法说明</button>
+                    <button class="sound-toggle-btn" id="soundToggleBtn">
+                        <img src="./CowACow/images/music_on.png" class="sound-icon" alt="音效开关">
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="game-field" id="gameField"></div>
+        <div class="slot-container" id="slotContainer">
+            <div class="slot" data-index="0"></div>
+            <div class="slot" data-index="1"></div>
+            <div class="slot" data-index="2"></div>
+            <div class="slot" data-index="3"></div>
+            <div class="slot" data-index="4"></div>
+            <div class="slot" data-index="5"></div>
+            <div class="slot" data-index="6"></div>
+            <div class="slot" data-index="7" style="display: none;"></div>
+            <div class="slot" data-index="8" style="display: none;"></div>
+        </div>
+        <div class="function-buttons">
+            <div class="function-item" id="expandItem" title="卡槽扩容：卡槽上限+2，持续30秒，超时超7张失败，本关限用1次">
+                <button class="function-btn" id="expandBtn">
+                    <img src="./CowACow/images/expand.png" alt="卡槽扩容">
+                </button>
+                <div class="function-name">扩容</div>
+            </div>
+            <div class="function-item" id="shuffleItem" title="全局洗牌：打乱场地所有砖块位置，保留分层遮挡，本关限用1次">
+                <button class="function-btn" id="shuffleBtn">
+                    <img src="./CowACow/images/shuffle.png" alt="全局洗牌">
+                </button>
+                <div class="function-name">洗牌</div>
+            </div>
+            <div class="function-item" id="backtrackItem" title="步数回溯：回退上一次操作，无牌/无操作时不可用，本关限用1次">
+                <button class="function-btn" id="backtrackBtn">
+                    <img src="./CowACow/images/backtrack.png" alt="步数回溯">
+                </button>
+                <div class="function-name">回溯</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="winModal">
+        <div class="modal-content">
+            <div id="winText">恭喜！通关本关</div>
+            <button class="modal-btn" id="nextLevelBtn">下一关</button>
+        </div>
+    </div>
+
+    <div class="modal" id="loseModal">
+        <div class="modal-content">
+            <div id="loseText">游戏失败！卡槽已满</div>
+            <button class="modal-btn" id="restartLevelBtn">重新开始</button>
+        </div>
+    </div>
+
+    <div class="modal" id="allWinModal">
+        <div class="modal-content all-win-content">
+            <div class="all-win-text">您已通关！</div>
+            <img src="./CowACow/images/all_win.png" class="win-img" alt="通关图片">
+            <button class="modal-btn" id="restartAllBtn">重新开始游戏</button>
+        </div>
+    </div>
+
+    <div class="modal" id="guideModal">
+        <div class="modal-content" style="max-width: 80%; max-height: 80vh; overflow-y: auto; padding: 30px; text-align: left;">
+            <h2 style="color: #8b5a2b; margin-bottom: 20px; text-align: center;">牛了个牛玩法说明</h2>
+            <h3 style="color: #8b5a2b; margin: 15px 0 8px;">一、核心玩法</h3>
+            <p style="margin: 8px 0; line-height: 1.6; font-size: 16px; font-weight: normal;">游戏共5关，目标是消除场地内所有砖块，全部通关即为胜利。点击<strong>无上层砖块遮挡</strong>的砖块，可将其加入下方卡槽，卡槽内累计3个相同类型的砖块会自动消除，释放空间。</p>
+            
+            <h3 style="color: #8b5a2b; margin: 15px 0 8px;">二、基础规则</h3>
+            <p style="margin: 8px 0; line-height: 1.6; font-size: 16px; font-weight: normal;"><strong>1. 砖块与卡槽</strong>：<strong>仅无上层砖块遮挡的砖块可点击</strong>（上层砖块会遮挡下层）；默认卡槽上限7个，卡槽满且无法消除时游戏失败。</p>
+            <p style="margin: 8px 0; line-height: 1.6; font-size: 16px; font-weight: normal;"><strong>2. 关卡与重启</strong>：通关当前关卡可解锁下一关，难度逐级提升；游戏失败或需重开时，点击「重新开始」即可重置本关。</p>
+            <p style="margin: 8px 0; line-height: 1.6; font-size: 16px; font-weight: normal;"><strong>3. 音效控制</strong>：点击顶部音效开关，可开启/关闭背景音乐及操作音效。</p>
+            
+            <h3 style="color: #8b5a2b; margin: 15px 0 8px;">三、道具用法（每关仅可用1次）</h3>
+            <ul style="margin: 8px 0 8px 20px; line-height: 1.6; font-size: 16px; font-weight: normal;">
+                <li>卡槽扩容：将卡槽上限临时提升至9个，持续30秒，超时后卡槽超7张则失败。</li>
+                <li>全局洗牌：<strong>打乱场地内所有砖块的位置</strong>，保留分层和遮挡关系，无牌时不可用。</li>
+                <li>步数回溯：回退上一次操作，<strong>无操作记录/场地无牌时不可用</strong>。</li>
+            </ul>
+            
+            <h3 style="color: #8b5a2b; margin: 15px 0 8px;">四、关卡难度</h3>
+            <table style="width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 16px; font-weight: normal;">
+                <thead>
+                    <tr style="background: #f5e8c7;">
+                        <th style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">关卡</th>
+                        <th style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">砖块种类</th>
+                        <th style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">砖块总数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">1</td>
+                        <td style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">3种</td>
+                        <td style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">9个</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">2</td>
+                        <td style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">6种</td>
+                        <td style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">18个</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">3</td>
+                        <td style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">10种</td>
+                        <td style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">30个</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">4</td>
+                        <td style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">12种</td>
+                        <td style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">36个</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">5</td>
+                        <td style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">30种</td>
+                        <td style="border: 1px solid #8b5a2b; padding: 8px; text-align: center;">90个</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3 style="color: #8b5a2b; margin: 15px 0 8px;">五、温馨提示</h3>
+            <ul style="margin: 8px 0 8px 20px; line-height: 1.6; font-size: 16px; font-weight: normal;">
+                <li>合理规划道具使用时机，避免浪费。</li>
+                <li>扩容卡超时前需控制卡槽砖块数量，避免失败。</li>
+                <li>卡片表情来源：牛客网、阿里巴巴矢量图标库。</li>
+				<li>背景音乐：動悸。</li>
+            </ul>
+            
+            <button class="modal-btn" id="closeGuideBtn" style="margin-top: 25px; display: block; margin-left: auto; margin-right: auto;">关闭</button>
+        </div>
+    </div>
+
+    <script>
+        // 资源缓存函数（图片/音频各加载1次）
+        const resCache = { img: {}, audio: {} };
+        // 图片缓存：复用已加载图片，避免重复请求
+        function getImgUrl(src) {
+            if (resCache.img[src]) return resCache.img[src];
+            const img = new Image();
+            img.src = src;
+            resCache.img[src] = src;
+            return src;
+        }
+        // 音频缓存：复用已加载音频，避免重复创建
+        function getAudio(src) {
+            if (resCache.audio[src]) return resCache.audio[src];
+            const audio = new Audio(src);
+            resCache.audio[src] = audio;
+            return audio;
+        }
+
+        const LEVEL_CONFIG = {
+            1: { brickTypes: 3, count: 9, layers: 3 }, // 3层，每层3个砖
+            2: { brickTypes: 6, count: 18, layers: 3 }, // 3层，每层6个砖
+            3: { brickTypes: 10, count: 30, layers: 5 }, // 5层，每层6个砖
+            4: { brickTypes: 12, count: 36, layers: 5 }, // 5层，每层7-8个砖
+            5: { brickTypes: 30, count: 90, layers: 8 }, // 8层，每层11-12个砖
+        };
+        const IMG_BASE_URL = "./CowACow/images/";
+        const AUDIO_BASE_URL = "./CowACow/audio/";
+        const EXPAND_TIME = 30;
+        const BRICK_SIZE = 60;
+        const BRICK_GAP = 5; // 同层砖块间距，防止同层重叠
+
+        // 音频初始化：接入音频缓存，仅加载1次
+        const bgMusic = getAudio(`${AUDIO_BASE_URL}bg_music.mp3`);
+        const clickSound = getAudio(`${AUDIO_BASE_URL}click.mp3`);
+        const clearSound = getAudio(`${AUDIO_BASE_URL}clear.mp3`);
+        const winSound = getAudio(`${AUDIO_BASE_URL}win.wav`);
+        const functionSound = getAudio(`${AUDIO_BASE_URL}function.mp3`);
+        let isMusicOn = true;
+
+        // 游戏全局变量
+        let currentLevel = 1;
+        let bricks = [];
+        let slotList = [];
+        let SLOT_MAX = 7;
+        let expandTimer = null;
+        let countdownTimer = null;
+        let operationHistory = [];
+        let toolUsed = { expand: false, shuffle: false, backtrack: false };
+
+        // DOM节点
+        const gameField = document.getElementById('gameField');
+        const currentLevelDom = document.getElementById('currentLevel');
+        const gameContainer = document.getElementById('gameContainer');
+        const winModal = document.getElementById('winModal');
+        const loseModal = document.getElementById('loseModal');
+        const allWinModal = document.getElementById('allWinModal');
+        const nextLevelBtn = document.getElementById('nextLevelBtn');
+        const restartLevelBtn = document.getElementById('restartLevelBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const restartAllBtn = document.getElementById('restartAllBtn');
+        const winText = document.getElementById('winText');
+        const loseText = document.getElementById('loseText');
+        const expandCountdown = document.getElementById('expandCountdown');
+        const expandItem = document.getElementById('expandItem');
+        const shuffleItem = document.getElementById('shuffleItem');
+        const backtrackItem = document.getElementById('backtrackItem');
+
+        // 音频初始化
+        function initAudio() {
+            bgMusic.loop = true;
+            bgMusic.volume = 0.3;
+            clickSound.volume = 0.5;
+            clearSound.volume = 0.5;
+            winSound.volume = 0.6;
+            functionSound.volume = 0.5;
+
+            document.body.addEventListener('click', () => {
+                if (isMusicOn && bgMusic.paused) bgMusic.play().catch(err => {});
+            }, { once: true });
+
+            document.getElementById('soundToggleBtn').onclick = toggleMusic;
+        }
+
+        function toggleMusic() {
+            isMusicOn = !isMusicOn;
+            const soundIcon = document.querySelector('.sound-icon');
+            soundIcon.src = isMusicOn 
+                ? getImgUrl(`${IMG_BASE_URL}music_on.png`) 
+                : getImgUrl(`${IMG_BASE_URL}music_off.png`);
+            isMusicOn ? bgMusic.play().catch(err => {}) : bgMusic.pause();
+        }
+
+        function playSound(sound) {
+            if (isMusicOn) {
+                sound.currentTime = 0;
+                sound.play().catch(err => {});
+            }
+        }
+
+        // 数组打乱算法
+        function shuffleArray(arr) {
+            const newArr = [...arr];
+            for (let i = newArr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+            }
+            return newArr;
+        }
+
+        // 卡槽排序
+        function sortSlotList() {
+            slotList.sort((a, b) => Number(a) - Number(b));
+        }
+
+        // 检测回溯/洗牌按钮状态 + 动态悬浮提示（修复禁用不显示）
+        function checkToolBtnStatus() {
+            // 回溯按钮：多条件判断+动态提示
+            let backtrackTip = "步数回溯：回退上一次操作，无牌/无操作时不可用，本关限用1次";
+            if (toolUsed.backtrack) backtrackTip = "本关已使用过回溯，无法再次使用";
+            else if (bricks.length === 0) backtrackTip = "场地无牌，无需回溯";
+            else if (operationHistory.length === 0) backtrackTip = "暂无操作记录，无法回溯";
+            backtrackItem.title = backtrackTip;
+            const isBacktrackDisable = toolUsed.backtrack || bricks.length === 0 || operationHistory.length === 0;
+            backtrackItem.classList.toggle('disabled', isBacktrackDisable);
+
+            // 洗牌按钮：无牌/已使用 → 禁用+动态提示
+            let shuffleTip = "全局洗牌：打乱场地所有砖块位置，本关限用1次";
+            if (toolUsed.shuffle) shuffleTip = "本关已使用过洗牌，无法再次使用";
+            else if (bricks.length === 0) shuffleTip = "场地无牌，无需洗牌";
+            shuffleItem.title = shuffleTip;
+            const isShuffleDisable = toolUsed.shuffle || bricks.length === 0;
+            shuffleItem.classList.toggle('disabled', isShuffleDisable);
+
+            // 扩容按钮：已使用禁用+提示
+            let expandTip = "卡槽扩容：卡槽上限+2，持续30秒，超时超7张失败，本关限用1次";
+            if (toolUsed.expand) expandTip = "本关已使用过扩容，无法再次使用";
+            expandItem.title = expandTip;
+            expandItem.classList.toggle('disabled', toolUsed.expand);
+        }
+
+        // 初始化游戏
+        function initGame(level) {
+            if (expandTimer) clearTimeout(expandTimer);
+            if (countdownTimer) clearInterval(countdownTimer);
+            bricks = [];
+            slotList = [];
+            operationHistory = [];
+            SLOT_MAX = 7;
+            gameField.innerHTML = '';
+            clearSlots();
+            document.querySelectorAll('.slot[data-index="7"], .slot[data-index="8"]').forEach(slot => slot.style.display = 'none');
+            expandCountdown.style.display = 'none';
+            expandCountdown.innerText = EXPAND_TIME;
+            toolUsed = { expand: false, shuffle: false, backtrack: false };
+
+            currentLevel = level;
+            currentLevelDom.innerText = level;
+            gameContainer.className = level === 5 ? 'game-container level-5' : 'game-container';
+            createBricks(level);
+            bindBrickClick();
+            checkClickableBricks();
+            checkToolBtnStatus(); // 初始化后检测按钮状态
+            if (isMusicOn && bgMusic.paused) bgMusic.play().catch(err => {});
+        }
+
+        // 严格分层生成砖块
+        function createBricks(level) {
+            const { brickTypes, count, layers } = LEVEL_CONFIG[level];
+            const fieldWidth = gameField.clientWidth - BRICK_SIZE - 20;
+            const fieldHeight = gameField.clientHeight - BRICK_SIZE - 20;
+            const bricksPerLayer = Math.ceil(count / layers);
+            let brickTypeArr = [];
+
+            for (let i = 1; i <= brickTypes; i++) brickTypeArr = brickTypeArr.concat([i, i, i]);
+            brickTypeArr = shuffleArray(brickTypeArr).slice(0, count);
+
+            for (let layer = 1; layer <= layers; layer++) {
+                const zIndex = layer;
+                const currentLayerBricks = [];
+                const maxTry = 50;
+
+                const currentLayerCount = layer === layers ? count - bricks.length : bricksPerLayer;
+                for (let i = 0; i < currentLayerCount; i++) {
+                    let brickX, brickY;
+                    let tryCount = 0;
+                    let isOverlap = true;
+
+                    while (isOverlap && tryCount < maxTry) {
+                        tryCount++;
+                        brickX = Math.random() * (fieldWidth - BRICK_GAP);
+                        brickY = Math.random() * (fieldHeight - BRICK_GAP);
+                        isOverlap = false;
+
+                        currentLayerBricks.forEach(existBrick => {
+                            const newX1 = brickX;
+                            const newY1 = brickY;
+                            const newX2 = brickX + BRICK_SIZE;
+                            const newY2 = brickY + BRICK_SIZE;
+                            const gapOverlap = !(newX1 >= existBrick.x2 + BRICK_GAP || 
+                                                newX2 <= existBrick.x1 - BRICK_GAP || 
+                                                newY1 >= existBrick.y2 + BRICK_GAP || 
+                                                newY2 <= existBrick.y1 - BRICK_GAP);
+                            if (gapOverlap) isOverlap = true;
+                        });
+                    }
+
+                    const brickType = brickTypeArr[bricks.length];
+                    const brick = {
+                        id: `brick_${bricks.length}`,
+                        type: brickType,
+                        left: brickX,
+                        top: brickY,
+                        zIndex: zIndex,
+                        clickable: false,
+                        x1: brickX,
+                        y1: brickY,
+                        x2: brickX + BRICK_SIZE,
+                        y2: brickY + BRICK_SIZE
+                    };
+                    bricks.push(brick);
+                    currentLayerBricks.push(brick);
+
+                    const brickDom = document.createElement('div');
+                    brickDom.className = 'brick unclickable';
+                    brickDom.id = brick.id;
+                    brickDom.style.left = `${brickX}px`;
+                    brickDom.style.top = `${brickY}px`;
+                    brickDom.style.zIndex = zIndex;
+                    brickDom.style.backgroundImage = `url(${getImgUrl(`${IMG_BASE_URL}brick_${brickType}.png`)})`;
+                    gameField.appendChild(brickDom);
+                }
+            }
+        }
+
+        // 一被高层遮挡就不可点击
+        function checkClickableBricks() {
+            bricks.forEach(brick => {
+                const dom = document.getElementById(brick.id);
+                if (dom) {
+                    dom.classList.remove('clickable');
+                    dom.classList.add('unclickable');
+                    brick.clickable = false;
+                }
+            });
+
+            bricks.forEach(brickA => {
+                let isCovered = false;
+                for (let brickB of bricks) {
+                    if (brickA.id === brickB.id || brickB.zIndex <= brickA.zIndex) continue;
+                    const isOverlap = !(brickA.x1 >= brickB.x2 || brickA.x2 <= brickB.x1 || brickA.y1 >= brickB.y2 || brickA.y2 <= brickB.y1);
+                    if (isOverlap) {
+                        isCovered = true;
+                        break;
+                    }
+                }
+                if (!isCovered) {
+                    const dom = document.getElementById(brickA.id);
+                    if (dom) {
+                        dom.classList.remove('unclickable');
+                        dom.classList.add('clickable');
+                        brickA.clickable = true;
+                    }
+                }
+            });
+        }
+
+        // 绑定砖块点击事件
+        function bindBrickClick() {
+            gameField.onclick = (e) => {
+                const brickDom = e.target.closest('.brick.clickable');
+                if (!brickDom) return;
+                const brick = bricks.find(item => item.id === brickDom.id);
+                if (!brick) return;
+
+                saveOperation(brick);
+                playSound(clickSound);
+                addToSlot(brick);
+                brickDom.remove();
+                bricks = bricks.filter(item => item.id !== brick.id);
+                checkClickableBricks();
+                checkToolBtnStatus(); // 消除砖块后更新按钮状态
+                checkWin();
+            };
+        }
+
+        // 保存操作历史
+        function saveOperation(brick) {
+            const historyItem = {
+                brick: { ...brick },
+                slotList: [...slotList],
+                bricks: [...bricks]
+            };
+            operationHistory.push(historyItem);
+            if (operationHistory.length > 20) operationHistory.shift();
+            checkToolBtnStatus(); // 有新操作后更新回溯按钮状态
+        }
+
+        // 卡槽逻辑
+        function addToSlot(brick) {
+            const type = brick.type + '';
+            if (slotList.length >= SLOT_MAX) {
+                loseText.innerText = '游戏失败！卡槽已满';
+                loseModal.style.display = 'flex';
+                return;
+            }
+
+            slotList.push(type);
+            sortSlotList();
+            updateSlotDom();
+
+            const sameTypeCount = slotList.filter(item => item === type).length;
+            if (sameTypeCount >= 3) {
+                playSound(clearSound);
+                slotList = slotList.filter(item => item !== type).concat(Array(sameTypeCount % 3).fill(type));
+                sortSlotList();
+                updateSlotDom();
+            }
+        }
+
+        // 更新卡槽显示
+        function updateSlotDom() {
+            const slots = document.querySelectorAll('.slot');
+            slots.forEach(slot => slot.innerHTML = '');
+            slotList.forEach((type, index) => {
+                if (slots[index]) {
+                    const brickDom = document.createElement('div');
+                    brickDom.className = 'slot-brick';
+                    brickDom.style.backgroundImage = `url(${getImgUrl(`${IMG_BASE_URL}brick_${type}.png`)})`;
+                    slots[index].appendChild(brickDom);
+                }
+            });
+        }
+
+        // 清空卡槽
+        function clearSlots() {
+            slotList = [];
+            updateSlotDom();
+        }
+
+        // 检测通关
+        function checkWin() {
+            if (bricks.length === 0) {
+                playSound(winSound);
+                checkToolBtnStatus(); // 无牌后最终更新按钮状态
+                if (currentLevel === 5) {
+                    allWinModal.style.display = 'flex';
+                } else {
+                    winModal.style.display = 'flex';
+                    winText.innerText = `恭喜！通关第${currentLevel}关`;
+                }
+            }
+        }
+
+        // 关闭所有弹窗
+        function closeAllModals() {
+            winModal.style.display = 'none';
+            loseModal.style.display = 'none';
+            allWinModal.style.display = 'none';
+            guideModal.style.display = 'none';
+        }
+
+        // 绑定按钮事件
+        function bindEvents() {
+            nextLevelBtn.onclick = () => {
+                closeAllModals();
+                initGame(currentLevel + 1);
+            };
+            restartLevelBtn.onclick = () => {
+                closeAllModals();
+                initGame(currentLevel);
+            };
+            restartBtn.onclick = () => {
+                closeAllModals();
+                initGame(currentLevel);
+            };
+            restartAllBtn.onclick = () => {
+                closeAllModals();
+                initGame(1);
+            };
+            window.onresize = () => {
+                bricks.forEach(brick => {
+                    brick.x1 = brick.left;
+                    brick.y1 = brick.top;
+                    brick.x2 = brick.left + BRICK_SIZE;
+                    brick.y2 = brick.top + BRICK_SIZE;
+                });
+                checkClickableBricks();
+            };
+
+            expandItem.onclick = () => {
+                useExpandCard();
+                checkToolBtnStatus(); // 使用后检测状态
+            };
+            shuffleItem.onclick = () => {
+                useShuffle();
+                checkToolBtnStatus(); // 使用后检测状态
+            };
+            backtrackItem.onclick = () => {
+                useBacktrack();
+                checkToolBtnStatus(); // 回溯后检测状态
+            };
+        }
+
+        // 卡槽扩容功能
+        function useExpandCard() {
+            if (toolUsed.expand) return;
+            playSound(functionSound);
+            toolUsed.expand = true;
+            SLOT_MAX = 9;
+
+            document.querySelectorAll('.slot[data-index="7"], .slot[data-index="8"]').forEach(slot => slot.style.display = 'flex');
+            expandCountdown.style.display = 'block';
+            let remainingTime = EXPAND_TIME;
+
+            countdownTimer = setInterval(() => {
+                remainingTime--;
+                expandCountdown.innerText = remainingTime;
+                if (remainingTime <= 0) {
+                    clearInterval(countdownTimer);
+                    expandCountdown.style.display = 'none';
+                    if (slotList.length > 7) {
+                        loseText.innerText = '游戏失败！扩容超时卡槽超7张';
+                        loseModal.style.display = 'flex';
+                    } else {
+                        SLOT_MAX = 7;
+                        document.querySelectorAll('.slot[data-index="7"], .slot[data-index="8"]').forEach(slot => slot.style.display = 'none');
+                        updateSlotDom();
+                    }
+                }
+            }, 1000);
+
+            expandTimer = setTimeout(() => {
+                if (countdownTimer) clearInterval(countdownTimer);
+                expandCountdown.style.display = 'none';
+            }, EXPAND_TIME * 1000 + 500);
+        }
+
+        // 全局洗牌（打乱所有砖块，保留Z轴/分层/遮挡）
+        function useShuffle() {
+            if (toolUsed.shuffle || bricks.length === 0) return; // 无牌直接返回
+            playSound(functionSound);
+            toolUsed.shuffle = true;
+            // 1. 获取所有砖块的原始位置，打乱顺序
+            const allPositions = bricks.map(brick => ({ left: brick.left, top: brick.top }));
+            const shuffledPositions = shuffleArray(allPositions);
+            // 2. 遍历所有砖块，重新分配位置
+            bricks.forEach((brick, index) => {
+                const dom = document.getElementById(brick.id);
+                if (dom) {
+                    // 更新位置和碰撞盒，保留Z轴/类型不变
+                    brick.left = shuffledPositions[index].left;
+                    brick.top = shuffledPositions[index].top;
+                    brick.x1 = brick.left;
+                    brick.y1 = brick.top;
+                    brick.x2 = brick.left + BRICK_SIZE;
+                    brick.y2 = brick.top + BRICK_SIZE;
+                    // 更新DOM样式
+                    dom.style.left = `${brick.left}px`;
+                    dom.style.top = `${brick.top}px`;
+                }
+            });
+            checkClickableBricks(); // 洗牌后重新检测遮挡
+        }
+
+        // 步数回溯功能
+        function useBacktrack() {
+            if (toolUsed.backtrack || bricks.length === 0 || operationHistory.length === 0) return;
+            playSound(functionSound);
+            toolUsed.backtrack = true;
+
+            const targetIndex = operationHistory.length - 1;
+            const targetState = operationHistory[targetIndex];
+
+            gameField.innerHTML = '';
+            bricks = targetState.bricks;
+            bricks.forEach(brick => {
+                const brickDom = document.createElement('div');
+                brickDom.className = brick.clickable ? 'brick clickable' : 'brick unclickable';
+                brickDom.id = brick.id;
+                brickDom.style.left = `${brick.left}px`;
+                brickDom.style.top = `${brick.top}px`;
+                brickDom.style.zIndex = brick.zIndex;
+                brickDom.style.backgroundImage = `url(${getImgUrl(`${IMG_BASE_URL}brick_${brick.type}.png`)})`;
+                gameField.appendChild(brickDom);
+            });
+
+            slotList = targetState.slotList;
+            sortSlotList();
+            updateSlotDom();
+
+            operationHistory = operationHistory.slice(0, targetIndex);
+            checkClickableBricks();
+        }
+
+        // 玩法说明弹窗
+        function initGuideModal() {
+            const guideBtn = document.getElementById('guideBtn');
+            const guideModal = document.getElementById('guideModal');
+            const closeGuideBtn = document.getElementById('closeGuideBtn');
+
+            guideBtn.onclick = () => {
+                guideModal.style.display = 'flex';
+                if (isMusicOn) bgMusic.pause();
+                playSound(functionSound);
+            };
+
+            closeGuideBtn.onclick = () => {
+                guideModal.style.display = 'none';
+                if (isMusicOn) bgMusic.play().catch(err => {});
+            };
+
+            window.onclick = (e) => {
+                if (e.target === guideModal) {
+                    guideModal.style.display = 'none';
+                    if (isMusicOn) bgMusic.play().catch(err => {});
+                }
+            };
+        }
+
+        // 游戏启动
+        window.onload = () => {
+            initAudio();
+            bindEvents();
+            initGuideModal();
+            initGame(1);
+        };
+    </script>
+</body>
+</html>
